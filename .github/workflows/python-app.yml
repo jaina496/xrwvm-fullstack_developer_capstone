@@ -3,9 +3,11 @@ name: Dealership CI/CD
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -36,6 +38,6 @@ jobs:
         working-directory: server/frontend
         run: npm ci
 
-            - name: Build React frontend
+      - name: Build React frontend
         working-directory: server/frontend
         run: CI=false npm run build
