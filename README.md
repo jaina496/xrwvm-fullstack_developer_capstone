@@ -1,4 +1,6 @@
-# Cars Dealership Web Application
+# xrwvm-fullstack_developer_capstone
+
+**Project Name:** Cars Dealership Web Application
 
 A full-stack web application for browsing car makes and models. This project is being developed as part of a full-stack developer capstone.
 
