@@ -17,7 +17,7 @@ const PostReview = () => {
   let root_url = curr_url.substring(0,curr_url.indexOf("postreview"));
   let params = useParams();
   let id =params.id;
-  let dealer_url = root_url+`djangoapp/dealer/${id}`;
+  let dealer_url = root_url+`djangoapp/get_dealer_details/${id}`;
   let review_url = root_url+`djangoapp/add_review`;
   let carmodels_url = root_url+`djangoapp/get_cars`;
 
@@ -56,34 +56,39 @@ const PostReview = () => {
       body: jsoninput,
   });
 
-  const json = await res.json();
-  if (json.status === 200) {
-      window.location.href = window.location.origin+"/dealer/"+id;
+  const responseData = await res.json();
+
+  if (res.ok) {
+    window.location.href = window.location.origin + "/dealer/" + id;
+  } else {
+    alert(responseData.error || responseData.message || "Review could not be submitted. Please try again.");
   }
 
   }
-  const get_dealer = async ()=>{
-    const res = await fetch(dealer_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    if(retobj.status === 200) {
-      let dealerobjs = Array.from(retobj.dealer)
-      if(dealerobjs.length > 0)
-        setDealer(dealerobjs[0])
-    }
-  }
+  const get_dealer = async () => {
+    const res = await fetch(dealer_url);
+    if (!res.ok) throw new Error("Could not load dealer");
+    const dealerData = await res.json();
+    setDealer(dealerData);
+  };
 
-  const get_cars = async ()=>{
-    const res = await fetch(carmodels_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    let carmodelsarr = Array.from(retobj.CarModels)
-    setCarmodels(carmodelsarr)
-  }
+  const get_cars = async () => {
+    const res = await fetch(carmodels_url);
+    if (!res.ok) throw new Error("Could not load cars");
+    const carMakes = await res.json();
+
+    const flattenedModels = Array.isArray(carMakes)
+      ? carMakes.flatMap(make =>
+          (Array.isArray(make.CarModels) ? make.CarModels : []).map(car => ({
+            CarMake: make.CarMake,
+            CarModel: car.Name
+          }))
+        )
+      : [];
+
+    setCarmodels(flattenedModels);
+  };
+
   useEffect(() => {
     get_dealer();
     get_cars();
@@ -103,8 +108,10 @@ const PostReview = () => {
       Car Make 
       <select name="cars" id="cars" onChange={(e) => setModel(e.target.value)}>
       <option value="" selected disabled hidden>Choose Car Make and Model</option>
-      {carmodels.map(carmodel => (
-          <option value={carmodel.CarMake+" "+carmodel.CarModel}>{carmodel.CarMake} {carmodel.CarModel}</option>
+      {carmodels.map((carmodel, index) => (
+          <option key={`${carmodel.CarMake}-${carmodel.CarModel}-${index}`} value={carmodel.CarMake+" "+carmodel.CarModel}>
+            {carmodel.CarMake} {carmodel.CarModel}
+          </option>
       ))}
       </select>        
       </div >
