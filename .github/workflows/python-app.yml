@@ -1,43 +1,67 @@
-
 name: Dealership CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  validate:
+  lint-python:
+    name: Lint Python Files
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
+      - name: Install Django requirements and Pylint
+        run: |
+          pip install -r server/requirements.txt
+          pip install pylint
+      - name: Lint Python Files
+        run: pylint --errors-only --disable=E1101,E0102,E0307 server/djangoapp
 
-      - name: Install Django requirements
-        run: pip install -r server/requirements.txt
-
-      - name: Check Django configuration
-        run: python server/manage.py check
-
+  lint-javascript:
+    name: Lint JavaScript Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
       - name: Install frontend dependencies
         working-directory: server/frontend
         run: npm ci
+      - name: Lint JavaScript Files
+        working-directory: server/frontend
+        run: CI=false npm run build
 
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install Django requirements
+        run: pip install -r server/requirements.txt
+      - name: Check Django configuration
+        run: python server/manage.py check
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install frontend dependencies
+        working-directory: server/frontend
+        run: npm ci
       - name: Build React frontend
         working-directory: server/frontend
         run: CI=false npm run build
